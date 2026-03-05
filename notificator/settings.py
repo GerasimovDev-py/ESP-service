@@ -98,7 +98,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'requests_app' / 'static',
 ]
-STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -106,5 +106,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 import os
 
 if os.getenv('VERCEL'):
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage'
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
