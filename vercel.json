@@ -1,22 +1,23 @@
 {
-  "builds": [
-    {
-      "src": "notificator/wsgi.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb",
-        "runtime": "python3.12"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "notificator/wsgi.py"
-    }
-  ]
+    "builds": [
+        {
+            "src": "notificator/wsgi.py",
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "15mb",
+                "runtime": "python3.12"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/static/(.*)",
+            "dest": "/static/$1"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "notificator/wsgi.py"
+        }
+    ],
+    "buildCommand": "pip install -r requirements.txt && python manage.py collectstatic --noinput"
 }

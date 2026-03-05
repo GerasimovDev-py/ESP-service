@@ -1,9 +1,8 @@
 #!/bin/bash
-
-echo "📦 Устанавливаем зависимости..."
+echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-echo "🎨 Собираем статику..."
+echo "🎨 Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "✅ Сборка завершена!"
+echo "✅ Build complete!"
