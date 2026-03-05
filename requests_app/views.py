@@ -256,35 +256,49 @@ def get_employee_requests(request):
     return JsonResponse({'status': 'error'}, status=400)
 @csrf_exempt
 def notify_client_from_app(request):
-    """API для отправки уведомлений клиенту из приложения"""
+    print(f"🔔 Получен запрос на /api/notify-client/ метод: {request.method}")
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            print(f"📦 Данные запроса: {data}")
+            
             request_id = data.get('request_id')
             status = data.get('status')
             comment = data.get('comment', '')
             
+            # Твой код отправки email
             from .email_utils import send_client_notification
             
+            # Получаем заявку
             service_request = ServiceRequest.objects.get(id=request_id)
+            print(f"📋 Заявка #{request_id} найдена")
             
+            # Получаем пользователя
             user = RegisterUser.objects.using('users_db').filter(full_name=service_request.full_name).first()
+            print(f"👤 Пользователь: {user}")
             
             if user and user.email:
-                send_client_notification(
+                print(f"📧 Отправка email на {user.email}")
+                result = send_client_notification(
                     client_email=user.email,
                     client_name=user.full_name,
                     request_id=request_id,
                     status=status,
                     comment=comment
                 )
-                return JsonResponse({'status': 'success'})
+                print(f"✅ Результат отправки: {result}")
+                return JsonResponse({'status': 'success', 'email_sent': result})
             else:
-                return JsonResponse({'status': 'error', 'message': 'Email клиента не найден'})
+                print(f"❌ Email не найден для пользователя {service_request.full_name}")
+                return JsonResponse({'status': 'error', 'message': 'Email не найден'})
                 
         except ServiceRequest.DoesNotExist:
+            print(f"❌ Заявка #{request_id} не найдена")
             return JsonResponse({'status': 'error', 'message': 'Заявка не найдена'}, status=404)
         except Exception as e:
+            print(f"❌ Ошибка: {e}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
-    return JsonResponse({'status': 'error'}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=400)
