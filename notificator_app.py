@@ -934,7 +934,7 @@ class ModernDesktopNotificator:
         try:
             import requests
             response = requests.post(
-                'http://127.0.0.1:8000/api/notify-client/',
+                'https://esp-service-production.up.railway.app/',
                 json={
                     'request_id': request_id,
                     'status': status,
