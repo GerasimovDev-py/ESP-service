@@ -1,0 +1,78 @@
+# Python
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+*.sqlite3
+
+# Django
+*.log
+local_settings.py
+media/
+staticfiles/
+static_root/
+media_root/
+
+# Базы данных (твои три БД)
+notificator_data.sqlite3
+Register_Users.sqlite3
+Access_data.sqlite3
+
+# Секретные файлы
+.env
+.venv
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Проектные файлы
+build/
+dist/
+*.spec
+*.exe
+*.ico
+__pycache__/
+
+# Логи
+logs/
+*.log
+
+# Временные файлы
+*.tmp
+*.temp
+*.bak
+*.sql
+*.dump
+
+# Архивы
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Приложение (exe файлы не храним в git)
+Конфигуратор.exe
+DesktopNotificator.exe
+*.exe
+
+# Данные для тестов
+test_*.py
+test_*.json

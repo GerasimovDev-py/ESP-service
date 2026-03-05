@@ -1,0 +1,57 @@
+{% extends 'requests_app/base.html' %}
+{% load static %}
+
+{% block title %}Единый Сервис Платежей{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="hero-section">
+        <h1 class="hero-title">Единый Сервис Платежей</h1>
+        <p class="hero-subtitle">Управляйте своими платежами и заявками в одном месте</p>
+        
+        <div class="auth-buttons">
+            <a href="/register-page/" class="btn btn-primary btn-lg">
+                <i class="bi bi-person-plus-fill me-2"></i>Зарегистрироваться
+            </a>
+            <a href="/login-page/" class="btn btn-outline-primary btn-lg">
+                <i class="bi bi-box-arrow-in-right me-2"></i>У меня уже есть аккаунт
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.landing-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.hero-title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #2d3748;
+    font-weight: 700;
+}
+
+.hero-subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: #4a5568;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.auth-buttons .btn {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends 'requests_app/base.html' %}
+{% load static %}
+
+{% block title %}Единый Сервис Платежей{% endblock %}
+
+{% block content %}
+<div class="landing-container">
+    <div class="hero-section">
+        <h1 class="hero-title">Единый Сервис Платежей</h1>
+        <p class="hero-subtitle">Управляйте своими платежами и заявками в одном месте</p>
+        
+        <div class="auth-buttons">
+            <button class="btn btn-primary btn-lg" onclick="showRegisterModal()">
+                <i class="bi bi-person-plus-fill me-2"></i>Зарегистрироваться
+            </button>
+            <button class="btn btn-outline-primary btn-lg" onclick="showLoginModal()">
+                <i class="bi bi-box-arrow-in-right me-2"></i>У меня уже есть аккаунт
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно регистрации -->
+<div id="registerModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Регистрация в ЕСП</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="registerForm" method="post" action="/register/">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Имя</label>
+                            <input type="text" name="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Фамилия</label>
+                            <input type="text" name="last_name" class="form-control" required>
+                        </div>
+                    </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Отчество</label>
+                            <input type="text" name="patronymic" class="form-control" required>
+                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Мобильный телефон</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+7 (___) ___-__-__" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Электронная почта</label>
+                        <input type="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">ID платежки (если есть)</label>
+                        <input type="text" name="payment_id" class="form-control">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" name="password1" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Подтверждение пароля</label>
+                        <input type="password" name="password2" class="form-control" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-check-circle me-2"></i>Зарегистрироваться
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно входа -->
+<div id="loginModal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Вход в личный кабинет</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" method="post" action="/login/">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Логин</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showRegisterModal() {
+    var modal = new bootstrap.Modal(document.getElementById('registerModal'));
+    modal.show();
+}
+
+function showLoginModal() {
+    var modal = new bootstrap.Modal(document.getElementById('loginModal'));
+    modal.show();
+}
+</script>
+{% endblock %}
