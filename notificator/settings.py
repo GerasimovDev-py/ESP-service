@@ -14,7 +14,21 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-l1b@2vw_u-ax#lwgq(^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '.up.railway.app',  # разрешаем все поддомены railway
+    'esp-service.up.railway.app',  # твой конкретный домен
+]
+
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.up.railway.app',  # разрешаем все https поддомены railway
+    'https://esp-service.up.railway.app',  # твой конкретный домен
+]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 INSTALLED_APPS = [
