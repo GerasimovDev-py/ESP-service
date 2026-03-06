@@ -386,125 +386,143 @@ class ModernDesktopNotificator:
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
     
     def load_data(self):
+    print("🔄 Загрузка данных...")  # отладка
+    for widget in self.scrollable_frame.winfo_children():
+        widget.destroy()
+    
+    try:
+        conn = self.get_pg_connection()
+        cursor = conn.cursor()
+        
+        if self.current_tab == "active":
+            status_filter = "status IN ('pending', 'in_progress')"
+        else:
+            status_filter = "status = 'completed'"
+        
+        cursor.execute(f"""
+            SELECT id, created_at, full_name, organization, department, 
+                   request_text, status, employee_response
+            FROM service_request 
+            WHERE {status_filter} AND department = %s
+            ORDER BY created_at DESC
+            LIMIT 100
+        """, (self.employee['department'],))
+        
+        requests = cursor.fetchall()
+        print(f"📊 Найдено заявок: {len(requests)}")  # отладка
+        for req in requests:
+            print(f"📝 Заявка: {req}")  # отладка - увидим что приходит
+        
+        conn.close()
+        
+        # Очищаем контейнер и создаем заголовки
         for widget in self.scrollable_frame.winfo_children():
             widget.destroy()
         
-        try:
-            conn = self.get_pg_connection()
-            cursor = conn.cursor()
+        # Заголовки таблицы
+        headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
+        headers_frame.pack(fill="x", pady=(0, 5))
+        
+        headers = ["ID", "Дата", "ФИО", "Организация", "Отдел", "Статус"]
+        for header in headers:
+            label = ctk.CTkLabel(
+                headers_frame,
+                text=header,
+                font=ctk.CTkFont(size=13, weight="bold"),
+                width=150
+            )
+            label.pack(side="left", padx=10, pady=10)
+        
+        # Если нет заявок
+        if not requests:
+            no_data = ctk.CTkLabel(
+                self.scrollable_frame,
+                text="📭 Нет заявок",
+                font=ctk.CTkFont(size=16)
+            )
+            no_data.pack(pady=50)
+            return
+        
+        # Отображаем заявки
+        department_map = {
+            'legal': 'Юридический',
+            'technical': 'Технический',
+            'accounting': 'Делопроизводство'
+        }
+        
+        for req in requests:
+            req_id, created, full_name, org, dept, text, status, response = req
             
-            if self.current_tab == "active":
-                status_filter = "status IN ('pending', 'in_progress')"
+            # Определяем цвет фона
+            if status == 'in_progress':
+                bg_color = "#1a3b5c"
+                border_color = "#2196F3"
+            elif status == 'pending':
+                bg_color = "#3d1a1a"
+                border_color = "#2b2b2b"
             else:
-                status_filter = "status = 'completed'"
+                bg_color = "#2b2b2b"
+                border_color = "#2b2b2b"
             
-            cursor.execute(f"""
-                SELECT id, created_at, full_name, organization, department, 
-                       request_text, status, employee_response
-                FROM service_request 
-                WHERE {status_filter} AND department = %s
-                ORDER BY created_at DESC
-                LIMIT 100
-            """, (self.employee['department'],))
+            # Строка заявки
+            row_frame = ctk.CTkFrame(
+                self.scrollable_frame,
+                fg_color=bg_color,
+                height=40,
+                corner_radius=5,
+                border_width=2 if status == 'in_progress' else 0,
+                border_color=border_color
+            )
+            row_frame.pack(fill="x", pady=1, padx=2)
             
-            requests = cursor.fetchall()
-            
-            cursor.execute("""
-                SELECT COUNT(*) FROM service_request 
-                WHERE status = 'pending' AND department = %s
-            """, (self.employee['department'],))
-            new_count = cursor.fetchone()[0]
-            
-            conn.close()
-            
-            self.counter_label.configure(text=f"Новых: {new_count}")
-            
-            department_map = {
-                'legal': 'Юридический',
-                'technical': 'Технический',
-                'accounting': 'Делопроизводство'
-            }
-            
+            # Индикатор статуса (цветной кружок)
             status_colors = {
                 'pending': '#dc3545',
                 'in_progress': '#ffc107',
                 'completed': '#28a745'
             }
+            status_color = status_colors.get(status, '#808080')
             
-            # Создаем заголовки
-            headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
-            headers_frame.pack(fill="x", pady=(0, 5))
+            status_indicator = ctk.CTkLabel(
+                row_frame,
+                text="●",
+                text_color=status_color,
+                font=ctk.CTkFont(size=14),
+                width=30
+            )
+            status_indicator.pack(side="left", padx=(15, 5))
             
-            headers = ["ID", "Дата", "ФИО", "Организация", "Отдел", "Статус"]
-            for header in headers:
+            # Данные заявки
+            values = [
+                str(req_id),
+                created[:16] if created else "",
+                full_name[:30] if full_name else "",
+                org[:30] if org else "",
+                department_map.get(dept, dept),
+                status
+            ]
+            
+            for val in values:
                 label = ctk.CTkLabel(
-                    headers_frame,
-                    text=header,
-                    font=ctk.CTkFont(size=13, weight="bold"),
-                    width=150
-                )
-                label.pack(side="left", padx=10, pady=10)
-            
-            # Отображаем заявки
-            for req in requests:
-                status = req[6]
-                
-                # Определяем цвет фона в зависимости от статуса
-                if status == 'in_progress':
-                    bg_color = "#1a3b5c"  # синий для "в работе"
-                elif status == 'pending':
-                    bg_color = "#3d1a1a"  # темно-красный для новых
-                else:
-                    bg_color = "#2b2b2b"  # серый для завершенных
-                
-                row_frame = ctk.CTkFrame(
-                    self.scrollable_frame,
-                    fg_color=bg_color,
-                    corner_radius=5,
-                    height=40,
-                    border_width=2 if status == 'in_progress' else 0,
-                    border_color="#2196F3" if status == 'in_progress' else bg_color
-                )
-                row_frame.pack(fill="x", pady=1, padx=2)
-                row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
-                
-                # Статус-индикатор (красный круг)
-                status_color = status_colors.get(status, '#808080')
-                status_label = ctk.CTkLabel(
                     row_frame,
-                    text="●",
-                    text_color=status_color,
-                    font=ctk.CTkFont(size=14),
-                    width=30
+                    text=val,
+                    width=150,
+                    anchor="w",
+                    font=ctk.CTkFont(size=12)
                 )
-                status_label.pack(side="left", padx=(15, 5))
-                status_label.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
-                
-                # Значения
-                values = [
-                    str(req[0]),  # ID
-                    req[1][:16] if req[1] else "",  # Дата
-                    req[2][:30] if req[2] else "",  # ФИО
-                    req[3][:30] if req[3] else "",  # Организация
-                    department_map.get(req[4], req[4]),  # Отдел
-                    status  # Статус (текстом)
-                ]
-                
-                for val in values:
-                    label = ctk.CTkLabel(
-                        row_frame,
-                        text=val,
-                        width=150,
-                        anchor="w",
-                        font=ctk.CTkFont(size=12)
-                    )
-                    label.pack(side="left", padx=5)
-                    label.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
-                
-        except Exception as e:
-            print(f"Ошибка загрузки: {e}")
-            import traceback
-            traceback.print_exc()
+                label.pack(side="left", padx=5)
+            
+            # Клик по любой части строки открывает детали
+            row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
+            for child in row_frame.winfo_children():
+                child.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
+        
+        print("✅ Загрузка завершена")
+        
+    except Exception as e:
+        print(f"❌ Ошибка загрузки: {e}")
+        import traceback
+        traceback.print_exc()
     
     def show_request_details(self, request):
         dialog = ctk.CTkToplevel(self.root)

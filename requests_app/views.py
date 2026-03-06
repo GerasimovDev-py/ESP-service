@@ -93,13 +93,10 @@ def cabinet(request):
     return render(request, 'requests_app/cabinet.html', context)
 
 def submit_request(request):
-    """Отправка заявки в notificator_data.sqlite3"""
     if request.method == 'POST':
-        # Проверяем что юзер залогинен
         if 'user_login' not in request.session:
             return JsonResponse({'status': 'error', 'message': 'Не авторизован'}, status=401)
         
-        # Получаем данные юзера из сессии
         user_login = request.session.get('user_login')
         user = RegisterUser.objects.using('users_db').get(login=user_login)
         
@@ -113,11 +110,11 @@ def submit_request(request):
             status='pending'
         )
         
-        print(f"✅ Заявка #{service_request.id} создана, отдел: {service_request.department}")
+        print(f"✅ Заявка #{service_request.id} создана")
         
-        # ==== ОТПРАВКА УВЕДОМЛЕНИЙ ====
+        # Отправляем уведомления
         try:
-            # Отправка клиенту
+            # Клиенту
             send_client_notification(
                 client_email=user.email,
                 client_name=user.full_name,
@@ -126,43 +123,31 @@ def submit_request(request):
             )
             print(f"📧 Уведомление клиенту отправлено на {user.email}")
             
-            # Отправка сотрудникам
-            keys_db_path = os.path.join(settings.BASE_DIR, 'Access_data.sqlite3')
-            conn = sqlite3.connect(keys_db_path)
-            cursor = conn.cursor()
+            # Сотрудникам
+            from .models import AccessKey
+            employees = AccessKey.objects.using('access_db').filter(
+                department=service_request.department,
+                is_active=True
+            )
             
-            cursor.execute("""
-                SELECT employee_name, email 
-                FROM access_keys 
-                WHERE department = ? AND is_active = 1 AND email IS NOT NULL
-            """, (service_request.department,))
-            
-            employees = cursor.fetchall()
-            conn.close()
-            
-            print(f"📧 Найдено сотрудников в отделе {service_request.department}: {len(employees)}")
-            
-            request_data = {
-                'id': service_request.id,
-                'full_name': service_request.full_name,
-                'organization': service_request.organization,
-                'request_text': service_request.request_text
-            }
-            
-            for emp_name, emp_email in employees:
+            for emp in employees:
                 send_employee_notification(
-                    employee_email=emp_email,
-                    employee_name=emp_name,
+                    employee_email=emp.email,
+                    employee_name=emp.employee_name,
                     department=service_request.department,
-                    request_data=request_data
+                    request_data={
+                        'id': service_request.id,
+                        'full_name': service_request.full_name,
+                        'organization': service_request.organization,
+                        'request_text': service_request.request_text
+                    }
                 )
-                print(f"📨 Уведомление отправлено {emp_name} ({emp_email})")
+                print(f"📧 Уведомление сотруднику {emp.employee_name} отправлено")
                 
         except Exception as e:
-            print(f"⚠️ Ошибка при отправке уведомлений: {e}")
+            print(f"⚠️ Ошибка отправки уведомлений: {e}")
             import traceback
             traceback.print_exc()
-        # ==== КОНЕЦ ОТПРАВКИ ====
         
         return JsonResponse({'status': 'success', 'message': 'Заявка успешно отправлена!'})
     
