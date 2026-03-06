@@ -432,6 +432,7 @@ class ModernDesktopNotificator:
                     text=header,
                     font=ctk.CTkFont(size=13, weight="bold"),
                     width=150
+                    text_color="white"
                 )
                 label.pack(side="left", padx=10, pady=10)
             
@@ -502,7 +503,8 @@ class ModernDesktopNotificator:
                         text=val,
                         width=150,
                         anchor="w",
-                        font=ctk.CTkFont(size=12)
+                        font=ctk.CTkFont(size=12),
+                        text_color="white"  # ЯВНО указываем цвет текста
                     )
                     label.pack(side="left", padx=5)
                 
