@@ -933,26 +933,34 @@ class ModernDesktopNotificator:
     def send_client_notification(self, request_id, status, comment=""):
         try:
             import requests
+            url = 'https://esp-service-production.up.railway.app/api/notify-client/'
+            print(f"📤 Отправка POST на {url}")
+            print(f"📦 Данные: request_id={request_id}, status={status}, comment={comment}")
+            
             response = requests.post(
-                'https://esp-service-production.up.railway.app/',
+                url,
                 json={
                     'request_id': request_id,
                     'status': status,
                     'comment': comment
                 },
-                timeout=5
+                timeout=10
             )
+            
+            print(f"📥 Статус ответа: {response.status_code}")
+            print(f"📥 Текст ответа: {response.text}")
+            
             if response.status_code == 200:
-                print(f"📧 Уведомление клиенту о заявке #{request_id} отправлено")
+                print("✅ Успешно!")
                 return True
             else:
-                print(f"⚠️ Ошибка API: {response.status_code}")
+                print(f"❌ Ошибка: {response.status_code}")
                 return False
-        except ImportError:
-            print("⚠️ Библиотека requests не установлена")
-            return False
+                
         except Exception as e:
-            print(f"⚠️ Ошибка уведомления клиента: {e}")
+            print(f"❌ Исключение: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def check_for_new_requests(self):
