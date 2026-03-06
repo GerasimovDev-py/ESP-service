@@ -92,66 +92,44 @@ def cabinet(request):
     }
     return render(request, 'requests_app/cabinet.html', context)
 
-def submit_request(request):
-    if request.method == 'POST':
-        if 'user_login' not in request.session:
-            return JsonResponse({'status': 'error', 'message': 'Не авторизован'}, status=401)
-        
-        user_login = request.session.get('user_login')
-        user = RegisterUser.objects.using('users_db').get(login=user_login)
-        
-        # Создаем заявку
-        service_request = ServiceRequest.objects.create(
-            full_name=user.full_name,
-            organization=request.POST.get('organization'),
-            department=request.POST.get('department'),
-            payment_doc=request.POST.get('payment_doc', ''),
-            request_text=request.POST.get('request_text'),
+# Отправляем уведомления в фоне
+def send_emails_thread():
+    try:
+        # Клиенту
+        send_client_notification(
+            client_email=user.email,
+            client_name=user.full_name,
+            request_id=service_request.id,
             status='pending'
         )
         
-        print(f"✅ Заявка #{service_request.id} создана")
+        # Сотрудникам
+        from .models import AccessKey
+        employees = AccessKey.objects.using('access_db').filter(
+            department=service_request.department,
+            is_active=True
+        )
         
-        # Отправляем уведомления
-        try:
-            # Клиенту
-            send_client_notification(
-                client_email=user.email,
-                client_name=user.full_name,
-                request_id=service_request.id,
-                status='pending'
-            )
-            print(f"📧 Уведомление клиенту отправлено на {user.email}")
-            
-            # Сотрудникам
-            from .models import AccessKey
-            employees = AccessKey.objects.using('access_db').filter(
+        for emp in employees:
+            send_employee_notification(
+                employee_email=emp.email,
+                employee_name=emp.employee_name,
                 department=service_request.department,
-                is_active=True
+                request_data={
+                    'id': service_request.id,
+                    'full_name': service_request.full_name,
+                    'organization': service_request.organization,
+                    'request_text': service_request.request_text
+                }
             )
-            
-            for emp in employees:
-                send_employee_notification(
-                    employee_email=emp.email,
-                    employee_name=emp.employee_name,
-                    department=service_request.department,
-                    request_data={
-                        'id': service_request.id,
-                        'full_name': service_request.full_name,
-                        'organization': service_request.organization,
-                        'request_text': service_request.request_text
-                    }
-                )
-                print(f"📧 Уведомление сотруднику {emp.employee_name} отправлено")
-                
-        except Exception as e:
-            print(f"⚠️ Ошибка отправки уведомлений: {e}")
-            import traceback
-            traceback.print_exc()
-        
-        return JsonResponse({'status': 'success', 'message': 'Заявка успешно отправлена!'})
-    
-    return JsonResponse({'status': 'error'}, status=400)
+    except Exception as e:
+        print(f"⚠️ Ошибка фоновой отправки email: {e}")
+
+# Запускаем в отдельном потоке
+import threading
+thread = threading.Thread(target=send_emails_thread)
+thread.daemon = True
+thread.start()
 
 @csrf_exempt
 def notify_client_from_app(request):

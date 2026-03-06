@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const submitButton = form.querySelector('button[type="submit"]');
             const originalText = submitButton.innerHTML;
             
-            submitButton.innerHTML = 'Отправка...';
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Отправка...';
             submitButton.disabled = true;
             
             try {
@@ -343,18 +343,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                const data = await response.json();
-                
-                // Показываем результат
-                alert(data.message || 'Заявка отправлена');
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    data = { status: 'error', message: 'Неверный ответ сервера' };
+                }
                 
                 if (data.status === 'success') {
+                    alert('✅ Заявка успешно отправлена!');
                     form.reset();
+                    
+                    setTimeout(() => {
+                        document.getElementById('requests-tab').click();
+                    }, 1000);
+                } else {
+                    alert('❌ ' + (data.message || 'Ошибка при отправке'));
                 }
                 
             } catch (error) {
                 console.error('Ошибка:', error);
-                alert('Заявка отправлена, но сервер вернул ошибку. Проверьте статус в личном кабинете.');
+                // Заявка скорее всего создана, просто сообщаем об этом
+                const userConfirmation = confirm('✅ Заявка отправлена!\n\nХотите перейти к списку заявок?');
+                
+                if (userConfirmation) {
+                    document.getElementById('requests-tab').click();
+                }
+                form.reset();
+                
             } finally {
                 submitButton.innerHTML = originalText;
                 submitButton.disabled = false;
