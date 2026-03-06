@@ -159,31 +159,42 @@ def notify_client_from_app(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            print(f"📧 Получен запрос на уведомление: {data}")
+            
             request_id = data.get('request_id')
             status = data.get('status')
             comment = data.get('comment', '')
             
-            # Получаем заявку
-            service_request = ServiceRequest.objects.get(id=request_id)
+            from .email_utils import send_client_notification
             
-            # Получаем email клиента из Register_Users
+            service_request = ServiceRequest.objects.get(id=request_id)
+            print(f"📋 Заявка #{request_id} найдена")
+            
+            # Ищем пользователя по ФИО
             user = RegisterUser.objects.using('users_db').filter(full_name=service_request.full_name).first()
             
             if user and user.email:
-                send_client_notification(
+                print(f"📧 Отправка email на {user.email}")
+                result = send_client_notification(
                     client_email=user.email,
                     client_name=user.full_name,
                     request_id=request_id,
                     status=status,
                     comment=comment
                 )
-                return JsonResponse({'status': 'success'})
+                print(f"✅ Результат отправки: {result}")
+                return JsonResponse({'status': 'success', 'sent': result})
             else:
-                return JsonResponse({'status': 'error', 'message': 'Email клиента не найден'})
+                print(f"❌ Email не найден для {service_request.full_name}")
+                return JsonResponse({'status': 'error', 'message': 'Email не найден'})
                 
         except ServiceRequest.DoesNotExist:
+            print(f"❌ Заявка {request_id} не найдена")
             return JsonResponse({'status': 'error', 'message': 'Заявка не найдена'}, status=404)
         except Exception as e:
+            print(f"❌ Ошибка: {e}")
+            import traceback
+            traceback.print_exc()
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     return JsonResponse({'status': 'error'}, status=400)

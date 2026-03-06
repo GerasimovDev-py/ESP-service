@@ -386,11 +386,12 @@ class ModernDesktopNotificator:
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1*(e.delta/120)), "units"))
     
     def load_data(self):
-        print("🔄 Загрузка данных...")  # отладка
-        for widget in self.scrollable_frame.winfo_children():
-            widget.destroy()
-        
+        """Загрузка и отображение заявок"""
         try:
+            # Очищаем контейнер
+            for widget in self.scrollable_frame.winfo_children():
+                widget.destroy()
+            
             conn = self.get_pg_connection()
             cursor = conn.cursor()
             
@@ -409,17 +410,18 @@ class ModernDesktopNotificator:
             """, (self.employee['department'],))
             
             requests = cursor.fetchall()
-            print(f"📊 Найдено заявок: {len(requests)}")  # отладка
-            for req in requests:
-                print(f"📝 Заявка: {req}")  # отладка - увидим что приходит
+            
+            cursor.execute("""
+                SELECT COUNT(*) FROM service_request 
+                WHERE status = 'pending' AND department = %s
+            """, (self.employee['department'],))
+            new_count = cursor.fetchone()[0]
             
             conn.close()
             
-            # Очищаем контейнер и создаем заголовки
-            for widget in self.scrollable_frame.winfo_children():
-                widget.destroy()
+            self.counter_label.configure(text=f"Новых: {new_count}")
             
-            # Заголовки таблицы
+            # СОЗДАЕМ ЗАГОЛОВКИ
             headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
             headers_frame.pack(fill="x", pady=(0, 5))
             
@@ -433,56 +435,48 @@ class ModernDesktopNotificator:
                 )
                 label.pack(side="left", padx=10, pady=10)
             
-            # Если нет заявок
-            if not requests:
-                no_data = ctk.CTkLabel(
-                    self.scrollable_frame,
-                    text="📭 Нет заявок",
-                    font=ctk.CTkFont(size=16)
-                )
-                no_data.pack(pady=50)
-                return
-            
-            # Отображаем заявки
+            # ОТОБРАЖАЕМ ЗАЯВКИ
             department_map = {
                 'legal': 'Юридический',
                 'technical': 'Технический',
                 'accounting': 'Делопроизводство'
             }
             
+            status_colors = {
+                'pending': '#dc3545',
+                'in_progress': '#ffc107',
+                'completed': '#28a745'
+            }
+            
+            status_names = {
+                'pending': 'Ожидает',
+                'in_progress': 'В работе',
+                'completed': 'Завершена',
+                'redirected': 'Перенаправлена'
+            }
+            
             for req in requests:
                 req_id, created, full_name, org, dept, text, status, response = req
                 
-                # Определяем цвет фона
+                # Цвет фона в зависимости от статуса
                 if status == 'in_progress':
                     bg_color = "#1a3b5c"
-                    border_color = "#2196F3"
                 elif status == 'pending':
                     bg_color = "#3d1a1a"
-                    border_color = "#2b2b2b"
                 else:
                     bg_color = "#2b2b2b"
-                    border_color = "#2b2b2b"
                 
                 # Строка заявки
                 row_frame = ctk.CTkFrame(
                     self.scrollable_frame,
                     fg_color=bg_color,
                     height=40,
-                    corner_radius=5,
-                    border_width=2 if status == 'in_progress' else 0,
-                    border_color=border_color
+                    corner_radius=5
                 )
                 row_frame.pack(fill="x", pady=1, padx=2)
                 
-                # Индикатор статуса (цветной кружок)
-                status_colors = {
-                    'pending': '#dc3545',
-                    'in_progress': '#ffc107',
-                    'completed': '#28a745'
-                }
+                # Статус-индикатор (цветной кружок)
                 status_color = status_colors.get(status, '#808080')
-                
                 status_indicator = ctk.CTkLabel(
                     row_frame,
                     text="●",
@@ -492,14 +486,14 @@ class ModernDesktopNotificator:
                 )
                 status_indicator.pack(side="left", padx=(15, 5))
                 
-                # Данные заявки
+                # Данные
                 values = [
                     str(req_id),
                     created[:16] if created else "",
                     full_name[:30] if full_name else "",
                     org[:30] if org else "",
                     department_map.get(dept, dept),
-                    status
+                    status_names.get(status, status)
                 ]
                 
                 for val in values:
@@ -512,18 +506,16 @@ class ModernDesktopNotificator:
                     )
                     label.pack(side="left", padx=5)
                 
-                # Клик по любой части строки открывает детали
+                # Клик по строке
                 row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                 for child in row_frame.winfo_children():
                     child.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
-            
-            print("✅ Загрузка завершена")
-            
+                    
         except Exception as e:
-            print(f"❌ Ошибка загрузки: {e}")
+            print(f"Ошибка загрузки: {e}")
             import traceback
             traceback.print_exc()
-    
+        
     def show_request_details(self, request):
         dialog = ctk.CTkToplevel(self.root)
         dialog.title(f"Заявка #{request[0]}")
