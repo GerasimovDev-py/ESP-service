@@ -423,18 +423,31 @@ class ModernDesktopNotificator:
             self.counter_label.configure(text=f"Новых: {new_count}")
             
             # ========== ЗАГОЛОВКИ ==========
-            headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
-            headers_frame.pack(fill="x", pady=(0, 5))
+            headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=35)
+            headers_frame.pack(fill="x", pady=(0, 2))
             
             # Создаем заголовки с правильными отступами
-            ctk.CTkLabel(headers_frame, text="  ", width=40).pack(side="left")  # отступ под кружок
+            headers = [
+                ("ID", 50),
+                ("Дата", 130),
+                ("ФИО", 150),
+                ("Организация", 150),
+                ("Отдел", 120),
+                ("Статус", 100)
+            ]
             
-            ctk.CTkLabel(headers_frame, text="ID", width=60, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
-            ctk.CTkLabel(headers_frame, text="Дата", width=120, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
-            ctk.CTkLabel(headers_frame, text="ФИО", width=150, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
-            ctk.CTkLabel(headers_frame, text="Организация", width=150, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
-            ctk.CTkLabel(headers_frame, text="Отдел", width=120, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
-            ctk.CTkLabel(headers_frame, text="Статус", width=100, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
+            # Добавляем пустой лейбл для отступа под кружок
+            ctk.CTkLabel(headers_frame, text="  ", width=30).pack(side="left")
+            
+            for header, width in headers:
+                ctk.CTkLabel(
+                    headers_frame,
+                    text=header,
+                    width=width,
+                    anchor="w",
+                    font=ctk.CTkFont(size=12, weight="bold"),
+                    text_color="white"
+                ).pack(side="left")
             
             # ========== ЗАЯВКИ ==========
             department_map = {
@@ -452,8 +465,7 @@ class ModernDesktopNotificator:
             status_names = {
                 'pending': 'Ожидает',
                 'in_progress': 'В работе',
-                'completed': 'Завершена',
-                'redirected': 'Перенаправлена'
+                'completed': 'Завершена'
             }
             
             for req in requests:
@@ -471,7 +483,7 @@ class ModernDesktopNotificator:
                 row_frame = ctk.CTkFrame(
                     self.scrollable_frame,
                     fg_color=bg_color,
-                    height=40
+                    height=35
                 )
                 row_frame.pack(fill="x", pady=1)
                 row_frame.pack_propagate(False)
@@ -483,51 +495,28 @@ class ModernDesktopNotificator:
                     text="●",
                     text_color=status_color,
                     font=ctk.CTkFont(size=14),
-                    width=40
-                ).pack(side="left")
+                    width=30
+                ).pack(side="left", padx=(10, 0))
                 
                 # Данные
-                ctk.CTkLabel(
-                    row_frame,
-                    text=str(req_id),
-                    width=60,
-                    anchor="w"
-                ).pack(side="left")
+                row_data = [
+                    (str(req_id), 50),
+                    (created[:16] if created else "", 130),
+                    (full_name[:25] if full_name else "", 150),
+                    (org[:25] if org else "", 150),
+                    (department_map.get(dept, dept), 120),
+                    (status_names.get(status, status), 100)
+                ]
                 
-                ctk.CTkLabel(
-                    row_frame,
-                    text=created[:16] if created else "",
-                    width=120,
-                    anchor="w"
-                ).pack(side="left")
-                
-                ctk.CTkLabel(
-                    row_frame,
-                    text=full_name[:30] if full_name else "",
-                    width=150,
-                    anchor="w"
-                ).pack(side="left")
-                
-                ctk.CTkLabel(
-                    row_frame,
-                    text=org[:30] if org else "",
-                    width=150,
-                    anchor="w"
-                ).pack(side="left")
-                
-                ctk.CTkLabel(
-                    row_frame,
-                    text=department_map.get(dept, dept),
-                    width=120,
-                    anchor="w"
-                ).pack(side="left")
-                
-                ctk.CTkLabel(
-                    row_frame,
-                    text=status_names.get(status, status),
-                    width=100,
-                    anchor="w"
-                ).pack(side="left")
+                for value, width in row_data:
+                    ctk.CTkLabel(
+                        row_frame,
+                        text=value,
+                        width=width,
+                        anchor="w",
+                        font=ctk.CTkFont(size=12),
+                        text_color="white"
+                    ).pack(side="left")
                 
                 # Клик по строке
                 row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
