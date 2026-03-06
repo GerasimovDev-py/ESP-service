@@ -34,6 +34,9 @@ SUPABASE_DB = "postgres"
 SUPABASE_USER = "postgres.kiwwemieqvqvrgboedjm"
 SUPABASE_PASSWORD = "m6zvsN0OUUGM4heT"
 
+# URL для API уведомлений
+API_BASE_URL = "https://esp-service-production.up.railway.app"
+
 dwFlags = 0x0001  
 ctypes.windll.kernel32.SetConsoleTitleW("Конфигуратор системы платежей")
 win32api.SetConsoleCtrlHandler(None, True)
@@ -366,20 +369,6 @@ class ModernDesktopNotificator:
         main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        headers = ["ID", "Дата", "ФИО", "Организация", "Отдел", "Статус"]
-        
-        header_frame = ctk.CTkFrame(main_frame, fg_color="#1f1f1f", height=40)
-        header_frame.pack(fill="x", pady=(0, 1))
-        
-        for i, header in enumerate(headers):
-            label = ctk.CTkLabel(
-                header_frame,
-                text=header,
-                font=ctk.CTkFont(size=13, weight="bold"),
-                width=150
-            )
-            label.pack(side="left", padx=10, pady=10)
-        
         canvas = tk.Canvas(main_frame, highlightthickness=0, bg='#2b2b2b')
         scrollbar = ctk.CTkScrollbar(main_frame, orientation="vertical", command=canvas.yview)
         self.scrollable_frame = ctk.CTkFrame(canvas)
@@ -442,27 +431,44 @@ class ModernDesktopNotificator:
                 'completed': '#28a745'
             }
             
+            # Создаем заголовки
+            headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
+            headers_frame.pack(fill="x", pady=(0, 5))
+            
+            headers = ["ID", "Дата", "ФИО", "Организация", "Отдел", "Статус"]
+            for header in headers:
+                label = ctk.CTkLabel(
+                    headers_frame,
+                    text=header,
+                    font=ctk.CTkFont(size=13, weight="bold"),
+                    width=150
+                )
+                label.pack(side="left", padx=10, pady=10)
+            
+            # Отображаем заявки
             for req in requests:
                 status = req[6]
                 
+                # Определяем цвет фона в зависимости от статуса
                 if status == 'in_progress':
-                    fg_color = "#1a3b5c"
-                    border_color = "#2196F3"
+                    bg_color = "#1a3b5c"  # синий для "в работе"
+                elif status == 'pending':
+                    bg_color = "#3d1a1a"  # темно-красный для новых
                 else:
-                    fg_color = "#2b2b2b"
-                    border_color = "#2b2b2b"
+                    bg_color = "#2b2b2b"  # серый для завершенных
                 
                 row_frame = ctk.CTkFrame(
                     self.scrollable_frame,
-                    fg_color=fg_color,
+                    fg_color=bg_color,
                     corner_radius=5,
                     height=40,
                     border_width=2 if status == 'in_progress' else 0,
-                    border_color=border_color
+                    border_color="#2196F3" if status == 'in_progress' else bg_color
                 )
                 row_frame.pack(fill="x", pady=1, padx=2)
                 row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                 
+                # Статус-индикатор (красный круг)
                 status_color = status_colors.get(status, '#808080')
                 status_label = ctk.CTkLabel(
                     row_frame,
@@ -474,12 +480,14 @@ class ModernDesktopNotificator:
                 status_label.pack(side="left", padx=(15, 5))
                 status_label.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                 
+                # Значения
                 values = [
-                    str(req[0]),
-                    req[1][:16] if req[1] else "",
-                    req[2][:30] if req[2] else "",
-                    req[3][:30] if req[3] else "",
-                    department_map.get(req[4], req[4]),
+                    str(req[0]),  # ID
+                    req[1][:16] if req[1] else "",  # Дата
+                    req[2][:30] if req[2] else "",  # ФИО
+                    req[3][:30] if req[3] else "",  # Организация
+                    department_map.get(req[4], req[4]),  # Отдел
+                    status  # Статус (текстом)
                 ]
                 
                 for val in values:
@@ -495,6 +503,8 @@ class ModernDesktopNotificator:
                 
         except Exception as e:
             print(f"Ошибка загрузки: {e}")
+            import traceback
+            traceback.print_exc()
     
     def show_request_details(self, request):
         dialog = ctk.CTkToplevel(self.root)
@@ -933,34 +943,29 @@ class ModernDesktopNotificator:
     def send_client_notification(self, request_id, status, comment=""):
         try:
             import requests
-            url = 'https://esp-service-production.up.railway.app/api/notify-client/'
-            print(f"📤 Отправка POST на {url}")
-            print(f"📦 Данные: request_id={request_id}, status={status}, comment={comment}")
+            import urllib3
+            # Отключаем warnings про SSL
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
             
             response = requests.post(
-                url,
+                f'{API_BASE_URL}/api/notify-client/',
                 json={
                     'request_id': request_id,
                     'status': status,
                     'comment': comment
                 },
-                timeout=10
+                timeout=5,
+                verify=False  # ВРЕМЕННО отключаем проверку SSL
             )
-            
-            print(f"📥 Статус ответа: {response.status_code}")
-            print(f"📥 Текст ответа: {response.text}")
-            
             if response.status_code == 200:
-                print("✅ Успешно!")
+                print(f"📧 Уведомление клиенту о заявке #{request_id} отправлено")
                 return True
             else:
-                print(f"❌ Ошибка: {response.status_code}")
+                print(f"⚠️ Ошибка API: {response.status_code}")
+                print(f"Ответ: {response.text}")
                 return False
-                
         except Exception as e:
-            print(f"❌ Исключение: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"⚠️ Ошибка уведомления клиента: {e}")
             return False
 
     def check_for_new_requests(self):
@@ -1039,7 +1044,7 @@ class ModernDesktopNotificator:
     
     def open_website(self):
         import webbrowser
-        webbrowser.open('http://127.0.0.1:8000')
+        webbrowser.open(API_BASE_URL)
     
     def show_statistics(self):
         try:
