@@ -56,8 +56,8 @@ def send_email(to_email, subject, message):
     print(f"❌ Все попытки отправки на {to_email} провалились")
     return False
 
-def send_employee_notification(employee_email, employee_name, department, request_data):
-    """Уведомление сотруднику о новой заявке"""
+def send_employee_notification(employee_email, employee_name, department, request_data, redirect_info=None):
+    """Уведомление сотруднику о новой заявке или перенаправлении"""
     
     dept_names = {
         'legal': 'Юридический',
@@ -66,24 +66,48 @@ def send_employee_notification(employee_email, employee_name, department, reques
     }
     dept_name = dept_names.get(department, department)
     
-    subject = f"🔔 Новая заявка №{request_data['id']} в {dept_name} отдел"
-    message = f"""
-    Уважаемый {employee_name}!
-    
-    В ваш отдел ({dept_name}) поступила новая заявка:
-    
-    📋 Номер заявки: {request_data['id']}
-    👤 Клиент: {request_data['full_name']}
-    🏢 Организация: {request_data['organization']}
-    
-    📝 Текст заявки:
-    {request_data['request_text']}
-    
-    Для обработки заявки откройте приложение "Конфигуратор".
-    
-    С уважением,
-    Единая система платежей
-    """
+    if redirect_info:
+        # Это перенаправленная заявка
+        subject = f"🔄 Перенаправлена заявка №{request_data['id']} в {dept_name} отдел"
+        message = f"""
+        Уважаемый {employee_name}!
+        
+        Сотрудник {redirect_info['from_employee']} из отдела {redirect_info['from_department']} перенаправил в ваш отдел заявку:
+        
+        📋 Номер заявки: {request_data['id']}
+        👤 Клиент: {request_data['full_name']}
+        🏢 Организация: {request_data['organization']}
+        
+        📝 Текст заявки:
+        {request_data['request_text']}
+        
+        💬 Комментарий: {redirect_info.get('comment', 'Без комментария')}
+        
+        Для обработки заявки откройте приложение "Конфигуратор".
+        
+        С уважением,
+        Единая система платежей
+        """
+    else:
+        # Новая заявка
+        subject = f"🔔 Новая заявка №{request_data['id']} в {dept_name} отдел"
+        message = f"""
+        Уважаемый {employee_name}!
+        
+        В ваш отдел ({dept_name}) поступила новая заявка:
+        
+        📋 Номер заявки: {request_data['id']}
+        👤 Клиент: {request_data['full_name']}
+        🏢 Организация: {request_data['organization']}
+        
+        📝 Текст заявки:
+        {request_data['request_text']}
+        
+        Для обработки заявки откройте приложение "Конфигуратор".
+        
+        С уважением,
+        Единая система платежей
+        """
     
     return send_email(employee_email, subject, message)
 
@@ -97,58 +121,55 @@ def send_client_notification(client_email, client_name, request_id, status, comm
         'completed': 'завершена'
     }
     
-    if status == 'pending':
-        subject = f"✅ Заявка №{request_id} успешно создана"
-        message = f"""
-        Уважаемый {client_name}!
-        
+    status_emoji = {
+        'pending': '✅',
+        'in_progress': '🟠',
+        'redirected': '🔄',
+        'completed': '✅'
+    }
+    
+    status_messages = {
+        'pending': f"""
         Ваша заявка №{request_id} успешно создана и передана в работу.
         Срок рассмотрения: до 3 рабочих дней.
         
         Вы можете отслеживать статус заявки в личном кабинете.
+        """,
         
-        С уважением,
-        Единая система платежей
-        """
-    elif status == 'in_progress':
-        subject = f"🟠 Заявка №{request_id} принята в работу"
-        message = f"""
-        Уважаемый {client_name}!
-        
+        'in_progress': f"""
         Ваша заявка №{request_id} принята в работу сотрудником нашего отдела.
         
         Вы можете отслеживать статус заявки в личном кабинете.
+        """,
         
-        С уважением,
-        Единая система платежей
-        """
-    elif status == 'redirected':
-        subject = f"🔄 Заявка №{request_id} перенаправлена"
-        message = f"""
-        Уважаемый {client_name}!
-        
+        'redirected': f"""
         Ваша заявка №{request_id} перенаправлена в профильный отдел для более качественного рассмотрения.
         
         Комментарий: {comment if comment else 'Перенаправлено по компетенции'}
         
-        С уважением,
-        Единая система платежей
-        """
-    elif status == 'completed':
-        subject = f"✅ Заявка №{request_id} выполнена"
-        message = f"""
-        Уважаемый {client_name}!
+        Вы можете отслеживать статус заявки в личном кабинете.
+        """,
         
+        'completed': f"""
         Ваша заявка №{request_id} выполнена.
         
         Ответ сотрудника:
         {comment if comment else 'Заявка обработана'}
         
-        С уважением,
-        Единая система платежей
+        Спасибо за обращение!
         """
-    else:
-        return True
+    }
+    
+    subject = f"{status_emoji.get(status, '📬')} Заявка №{request_id} {status_text.get(status, 'обновлена')}"
+    
+    message = f"""
+    Уважаемый {client_name}!
+    
+    {status_messages.get(status, 'Статус вашей заявки обновлен.')}
+    
+    С уважением,
+    Единая система платежей
+    """
     
     return send_email(client_email, subject, message)
 
