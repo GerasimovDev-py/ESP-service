@@ -424,17 +424,36 @@ class ModernDesktopNotificator:
             # СОЗДАЕМ ЗАГОЛОВКИ
             headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
             headers_frame.pack(fill="x", pady=(0, 5))
-            
-            headers = ["ID", "Дата", "ФИО", "Организация", "Отдел", "Статус"]
-            for header in headers:
+            headers_frame.pack_propagate(False)
+
+            # Контейнер для заголовков
+            headers_content = ctk.CTkFrame(headers_frame, fg_color="transparent", height=40)
+            headers_content.pack(fill="both", expand=True)
+            headers_content.pack_propagate(False)
+
+            # Пустой лейбл для отступа под статус-индикатор
+            ctk.CTkLabel(headers_content, text="  ", width=45).pack(side="left")
+
+            headers_config = [
+                ("ID", 80),
+                ("Дата", 130),
+                ("ФИО", 150),
+                ("Организация", 150),
+                ("Отдел", 120),
+                ("Статус", 100)
+            ]
+
+            for header, width in headers_config:
                 label = ctk.CTkLabel(
-                    headers_frame,
+                    headers_content,
                     text=header,
+                    width=width,
+                    anchor="w",
                     font=ctk.CTkFont(size=13, weight="bold"),
-                    width=150
-                    text_color="white"
+                    text_color="white",
+                    fg_color="transparent"
                 )
-                label.pack(side="left", padx=10, pady=10)
+                label.pack(side="left", padx=2)
             
             # ОТОБРАЖАЕМ ЗАЯВКИ
             department_map = {
@@ -475,11 +494,22 @@ class ModernDesktopNotificator:
                     corner_radius=5
                 )
                 row_frame.pack(fill="x", pady=1, padx=2)
+                row_frame.pack_propagate(False)  # Запрещаем изменение размера
+                
+                # Контейнер для содержимого строки
+                content_frame = ctk.CTkFrame(row_frame, fg_color="transparent", height=40)
+                content_frame.pack(fill="both", expand=True)
+                content_frame.pack_propagate(False)
                 
                 # Статус-индикатор (цветной кружок)
-                status_color = status_colors.get(status, '#808080')
+                status_color = {
+                    'pending': '#dc3545',
+                    'in_progress': '#ffc107',
+                    'completed': '#28a745'
+                }.get(status, '#808080')
+                
                 status_indicator = ctk.CTkLabel(
-                    row_frame,
+                    content_frame,
                     text="●",
                     text_color=status_color,
                     font=ctk.CTkFont(size=14),
@@ -487,31 +517,34 @@ class ModernDesktopNotificator:
                 )
                 status_indicator.pack(side="left", padx=(15, 5))
                 
-                # Данные
-                values = [
-                    str(req_id),
-                    created[:16] if created else "",
-                    full_name[:30] if full_name else "",
-                    org[:30] if org else "",
-                    department_map.get(dept, dept),
-                    status_names.get(status, status)
+                # Данные - каждый со своей фиксированной шириной
+                values_config = [
+                    (str(req_id), 80),  # ID - уже
+                    (created[:16] if created else "", 130),  # Дата
+                    (full_name[:30] if full_name else "", 150),  # ФИО
+                    (org[:30] if org else "", 150),  # Организация
+                    (department_map.get(dept, dept), 120),  # Отдел
+                    (status_names.get(status, status), 100)  # Статус
                 ]
                 
-                for val in values:
+                for val, width in values_config:
                     label = ctk.CTkLabel(
-                        row_frame,
+                        content_frame,
                         text=val,
-                        width=150,
+                        width=width,
                         anchor="w",
                         font=ctk.CTkFont(size=12),
-                        text_color="white"  # ЯВНО указываем цвет текста
+                        text_color="white",
+                        fg_color="transparent"
                     )
-                    label.pack(side="left", padx=5)
+                    label.pack(side="left", padx=2)
                 
                 # Клик по строке
                 row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                 for child in row_frame.winfo_children():
                     child.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
+                    for subchild in child.winfo_children():
+                        subchild.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                     
         except Exception as e:
             print(f"Ошибка загрузки: {e}")
