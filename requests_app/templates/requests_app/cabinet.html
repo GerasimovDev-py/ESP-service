@@ -244,6 +244,11 @@
                                 </div>
                             </form>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- Кнопка выхода -->
     <div class="row mt-4">
@@ -254,6 +259,7 @@
         </div>
     </div>
 </div>
+
 <style>
 .status-pending {
     color: #ffffff !important;
@@ -312,57 +318,7 @@
     color: white;
 }
 </style>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('newRequestForm');
-    
-    if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalText = submitButton.innerHTML;
-            
-            // Показываем загрузку
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Отправка...';
-            submitButton.disabled = true;
-            
-            try {
-                const response = await fetch(form.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    }
-                });
-                
-                const data = await response.json();
-                
-                if (data.status === 'success') {
-                    // Показываем уведомление об успехе
-                    alert('✅ Заявка успешно отправлена!');
-                    form.reset(); // Очищаем форму
-                    
-                    // Переключаемся на вкладку с заявками через 1 секунду
-                    setTimeout(() => {
-                        document.getElementById('requests-tab').click();
-                    }, 1000);
-                } else {
-                    alert('❌ Ошибка при отправке: ' + JSON.stringify(data.errors));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Ошибка соединения с сервером');
-            } finally {
-                // Возвращаем кнопку в исходное состояние
-                submitButton.innerHTML = originalText;
-                submitButton.disabled = false;
-            }
-        });
-    }
-});
-</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('newRequestForm');
