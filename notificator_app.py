@@ -19,7 +19,7 @@ import win32api
 import requests
 import warnings
 
-# Подавляем предупреждения Tkinter
+"""предупреждения Tkinter"""
 warnings.filterwarnings("ignore", category=UserWarning, module="tkinter")
 
 try:
@@ -31,14 +31,14 @@ except ImportError:
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# Настройки подключения к Supabase
+"""Настройка supabase"""
 SUPABASE_HOST = "aws-1-eu-central-1.pooler.supabase.com"
 SUPABASE_PORT = 5432
 SUPABASE_DB = "postgres"
 SUPABASE_USER = "postgres.kiwwemieqvqvrgboedjm"
 SUPABASE_PASSWORD = "m6zvsN0OUUGM4heT"
 
-# URL для API уведомлений
+"""URL для API"""
 API_BASE_URL = "https://esp-service-production.up.railway.app"
 
 class LoginWindow:
@@ -222,7 +222,7 @@ class ModernDesktopNotificator:
     def setup_main_window(self):
         self.root = ctk.CTk()
         self.root.title(f"Конфигуратор - {self.employee['full_name']} ({self.get_department_name()})")
-        self.root.state("zoomed")  # Во весь экран с рамками
+        self.root.state("zoomed")
         self.root.protocol('WM_DELETE_WINDOW', self.hide_window)
         self.setup_ui()
         self.start_auto_monitoring()
@@ -272,7 +272,7 @@ class ModernDesktopNotificator:
         sys.exit(0)
     
     def setup_ui(self):
-        # Верхняя панель
+        """ВЕРХНЯЯ"""
         top_frame = ctk.CTkFrame(self.root, height=60, corner_radius=0, fg_color="#1a1a1a")
         top_frame.pack(fill="x", padx=0, pady=0)
         
@@ -283,7 +283,7 @@ class ModernDesktopNotificator:
         )
         title.pack(side="left", padx=20, pady=15)
         
-        # Кнопки в топбаре
+        """Кнопки в топбаре"""
         btn_frame = ctk.CTkFrame(top_frame, fg_color="transparent")
         btn_frame.pack(side="right", padx=20)
         
@@ -302,7 +302,7 @@ class ModernDesktopNotificator:
                 height=35
             ).pack(side="left", padx=5)
         
-        # Вкладки
+        """Вкладки"""
         tab_frame = ctk.CTkFrame(self.root, height=40, fg_color="transparent")
         tab_frame.pack(fill="x", padx=20, pady=(10, 0))
         
@@ -326,11 +326,11 @@ class ModernDesktopNotificator:
         )
         self.archive_tab_btn.pack(side="left", padx=2)
         
-        # Основная область с таблицей
+        """Основная область с таблицей"""
         main_frame = ctk.CTkFrame(self.root)
         main_frame.pack(fill="both", expand=True, padx=20, pady=20)
         
-        # Canvas для скролла
+        """СANVAS чтобы можно было скролить мышкой вверх-вниз"""
         canvas = tk.Canvas(main_frame, highlightthickness=0, bg='#2b2b2b')
         scrollbar = ctk.CTkScrollbar(main_frame, orientation="vertical", command=canvas.yview)
         self.scrollable_frame = ctk.CTkFrame(canvas, fg_color="transparent")
@@ -346,7 +346,7 @@ class ModernDesktopNotificator:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # Нижняя панель статуса
+        """Нижняя панель"""
         status_frame = ctk.CTkFrame(self.root, height=30, fg_color="#1a1a1a")
         status_frame.pack(fill="x", side="bottom")
         
@@ -385,7 +385,7 @@ class ModernDesktopNotificator:
     def load_data(self):
         """Загрузка и отображение заявок"""
         try:
-            # Очищаем контейнер
+            """Чистка контейнера"""
             for widget in self.scrollable_frame.winfo_children():
                 widget.destroy()
             
@@ -418,7 +418,7 @@ class ModernDesktopNotificator:
             
             self.counter_label.configure(text=f"Новых: {new_count}")
             
-            # Если нет заявок
+            """Если нет заявок"""
             if not requests:
                 no_data_label = ctk.CTkLabel(
                     self.scrollable_frame,
@@ -428,11 +428,11 @@ class ModernDesktopNotificator:
                 no_data_label.pack(pady=50)
                 return
                 
-            # ========== ЗАГОЛОВКИ ==========
+            """ЗАГОЛОВКИ"""
             headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#1f1f1f", height=40)
             headers_frame.pack(fill="x", pady=(0, 5))
             
-            # Заголовки
+            """Заголовки"""
             ctk.CTkLabel(headers_frame, text="  ", width=30).pack(side="left")
             ctk.CTkLabel(headers_frame, text="ID", width=50, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
             ctk.CTkLabel(headers_frame, text="Дата", width=130, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
@@ -441,7 +441,7 @@ class ModernDesktopNotificator:
             ctk.CTkLabel(headers_frame, text="Отдел", width=120, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
             ctk.CTkLabel(headers_frame, text="Статус", width=100, anchor="w", font=ctk.CTkFont(weight="bold")).pack(side="left")
             
-            # ========== ЗАЯВКИ ==========
+            """ЗАЯВКИ"""
             department_map = {
                 'legal': 'Юридический',
                 'technical': 'Технический',
@@ -457,7 +457,7 @@ class ModernDesktopNotificator:
             for req in requests:
                 req_id, created, full_name, org, dept, text, status, response = req
                 
-                # Цвет фона
+                """Цвет Фона"""
                 if status == 'in_progress':
                     bg_color = "#1a3b5c"
                 elif status == 'pending':
@@ -465,7 +465,7 @@ class ModernDesktopNotificator:
                 else:
                     bg_color = "#2b2b2b"
                 
-                # Строка заявки
+                """Строка заявки"""
                 row_frame = ctk.CTkFrame(
                     self.scrollable_frame,
                     fg_color=bg_color,
@@ -474,7 +474,7 @@ class ModernDesktopNotificator:
                 row_frame.pack(fill="x", pady=1)
                 row_frame.pack_propagate(False)
                 
-                # Статус-индикатор
+                """Статус-индикатор"""
                 status_color = "#dc3545" if status == 'pending' else "#ffc107" if status == 'in_progress' else "#28a745"
                 ctk.CTkLabel(
                     row_frame,
@@ -484,15 +484,15 @@ class ModernDesktopNotificator:
                     width=30
                 ).pack(side="left", padx=(10, 0))
                 
-                # Преобразуем datetime в строку
+                """datetime в строку"""
                 date_str = created.strftime("%d.%m.%Y %H:%M") if created else ""
                 
-                # Исправляем ФИО если слиплось с организацией
+                """Исправляет ФИО если не помещается"""
                 display_name = full_name if full_name else ""
                 if display_name and org and org in display_name:
                     display_name = display_name.replace(org, "").strip()
                 
-                # Данные
+                """Данные"""
                 ctk.CTkLabel(row_frame, text=str(req_id), width=50, anchor="w").pack(side="left")
                 ctk.CTkLabel(row_frame, text=date_str, width=130, anchor="w").pack(side="left")
                 ctk.CTkLabel(row_frame, text=display_name, width=200, anchor="w").pack(side="left")
@@ -500,7 +500,7 @@ class ModernDesktopNotificator:
                 ctk.CTkLabel(row_frame, text=department_map.get(dept, dept), width=120, anchor="w").pack(side="left")
                 ctk.CTkLabel(row_frame, text=status_names.get(status, status), width=100, anchor="w").pack(side="left")
                 
-                # Клик
+                "Расклик"
                 row_frame.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
                 for child in row_frame.winfo_children():
                     child.bind("<Button-1>", lambda e, r=req: self.show_request_details(r))
@@ -532,7 +532,7 @@ class ModernDesktopNotificator:
             'redirected': '🔄 Перенаправлена'
         }
         
-        # Информация
+        """Инфа"""
         info_text = f"""
 ID: {request[0]}
 Дата: {request[1]}
@@ -550,7 +550,7 @@ ID: {request[0]}
         )
         info_label.pack(anchor="w", pady=10)
         
-        # Текст заявки
+        """Текст заявки"""
         text_label = ctk.CTkLabel(
             main_frame,
             text="📝 Текст заявки:",
@@ -563,7 +563,7 @@ ID: {request[0]}
         text_box.insert("1.0", request[5])
         text_box.configure(state="disabled")
         
-        # Ответ сотрудника
+        """Ответ сотрудника"""
         if request[7]:
             resp_label = ctk.CTkLabel(
                 main_frame,
@@ -577,11 +577,11 @@ ID: {request[0]}
             resp_box.insert("1.0", request[7])
             resp_box.configure(state="disabled")
         
-        # Кнопки
+        """Кнопки"""
         btn_frame = ctk.CTkFrame(main_frame, fg_color="transparent")
         btn_frame.pack(pady=20)
         
-        # Кнопка перенаправления для всех незавершенных заявок
+        """Кнопка перенаправления для всех незавершенных заявок"""
         if request[6] != 'completed':
             ctk.CTkButton(
                 btn_frame,
@@ -774,7 +774,7 @@ ID: {request[0]}
             messagebox.showerror("Ошибка", str(e))
     
     def complete_request(self, request_id, dialog):
-        # Создаем диалог для ответа
+        """диалог для ответа"""
         response_dialog = ctk.CTkToplevel(dialog)
         response_dialog.title("Ответ клиенту")
         response_dialog.geometry("500x400")
