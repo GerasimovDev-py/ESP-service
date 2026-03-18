@@ -1,7 +1,8 @@
-import psycopg2
-import time
 import os
 import sys
+import psycopg2
+import platform
+import time
 from datetime import datetime, timedelta
 import threading
 import customtkinter as ctk
@@ -196,28 +197,17 @@ class ModernDesktopNotificator:
         )
     
     def play_notification_sound(self):
+        if not self.sound_enabled:
+            return
+            
         try:
-            winsound.MessageBeep(winsound.MB_ICONINFORMATION)
-        except:
-            pass
-        
-    def show_notification(self, title, message):
-        try:
-            notification.notify(
-                title=title,
-                message=message,
-                app_name="Конфигуратор системы платежей",
-                app_icon=None,
-                timeout=10
-            )
-            print(f"📬 Уведомление отправлено: {title}")
+            if platform.system() == "Windows":
+                import winsound
+                winsound.MessageBeep(winsound.MB_ICONINFORMATION)
+            else:
+                print("\a") 
         except Exception as e:
-            print(f"Ошибка уведомления: {e}")
-            if hasattr(self, 'tray_icon'):
-                try:
-                    self.tray_icon.notify(message, title)
-                except:
-                    pass
+            print(f"Ошибка воспроизведения звука: {e}")
     
     def setup_main_window(self):
         self.root = ctk.CTk()
