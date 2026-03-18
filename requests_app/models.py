@@ -1,6 +1,6 @@
 from django.db import models
 
-# ========== МОДЕЛЬ КЛИЕНТОВ (Register_Users) ==========
+"""МОДЕЛЬ КЛИЕНТОВ (Register_Users)"""
 class RegisterUser(models.Model):
     first_name = models.CharField('Имя', max_length=100)
     middle_name = models.CharField('Отчество', max_length=100, blank=True)
@@ -21,7 +21,7 @@ class RegisterUser(models.Model):
     def __str__(self):
         return f"{self.last_name} {self.first_name} {self.middle_name}".strip()
 
-# ========== МОДЕЛЬ ЗАЯВОК (notificator_data) ==========
+"""МОДЕЛЬ ЗАЯВОК"""
 class ServiceRequest(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Ожидает рассмотрения'),
@@ -65,7 +65,7 @@ class ServiceRequest(models.Model):
         }
         return f"{status_emoji.get(self.status, '⚪')} {self.full_name} - {self.get_department_display()}"
 
-# ========== МОДЕЛЬ СОТРУДНИКОВ (notificator_data) ==========
+"""МОДЕЛЬ СОТРУДНИКОВ (notificator_data)"""
 class Employee(models.Model):
     DEPARTMENT_CHOICES = [
         ('legal', 'Юридический'),
@@ -90,7 +90,7 @@ class Employee(models.Model):
     def __str__(self):
         return f"{self.full_name} ({self.get_department_display()})"
 
-# ========== МОДЕЛЬ КЛЮЧЕЙ ДОСТУПА (Access_data) ==========
+"""МОДЕЛЬ КЛЮЧЕЙ ДОСТУПА (Access_data)"""
 class AccessKey(models.Model):
     key_value = models.CharField('Ключ доступа', max_length=50, unique=True)
     department = models.CharField('Отдел', max_length=20)

@@ -26,11 +26,11 @@ def register_page(request):
             middle_name = request.POST.get('middle_name', '')
             last_name = request.POST.get('last_name')
             
-            # Формируем полное ФИО
+            """Формируем полное ФИО"""
             full_name = f"{last_name} {first_name} {middle_name}".strip()
             print(f"👤 Создание пользователя: {full_name}")
             
-            # Проверяем обязательные поля
+            """Проверяем обязательные поля"""
             if not all([first_name, last_name, request.POST.get('phone'), 
                        request.POST.get('email'), request.POST.get('username'), 
                        request.POST.get('password1')]):
@@ -39,14 +39,14 @@ def register_page(request):
                     'error': 'Заполните все обязательные поля'
                 })
             
-            # Проверяем пароли
+            """Проверяем пароли"""
             if request.POST.get('password1') != request.POST.get('password2'):
                 print("❌ Пароли не совпадают")
                 return render(request, 'requests_app/register.html', {
                     'error': 'Пароли не совпадают'
                 })
             
-            # Создаем пользователя
+            """Создаем пользователя"""
             user = RegisterUser.objects.using('users_db').create(
                 first_name=first_name,
                 middle_name=middle_name,
@@ -61,7 +61,7 @@ def register_page(request):
             
             print(f"✅ Пользователь создан в БД users_db: {user.login}")
             
-            # Создаем сессию
+            """Создаем сессию"""
             request.session['user_login'] = user.login
             request.session['user_name'] = user.full_name
             request.session.save()
@@ -173,7 +173,7 @@ def submit_request(request):
         try:
             user = RegisterUser.objects.using('users_db').get(login=user_login)
             
-            # Создаем заявку
+            """Создаем заявку"""
             service_request = ServiceRequest.objects.create(
                 full_name=user.full_name,
                 organization=request.POST.get('organization'),
@@ -185,10 +185,10 @@ def submit_request(request):
             
             print(f"✅ Заявка #{service_request.id} создана")
             
-            # Отправляем уведомления в фоновом потоке
+            """Отправляем уведомления в фоновом потоке"""
             def send_emails_thread():
                 try:
-                    # Клиенту
+                    """Клиенту"""
                     send_client_notification(
                         client_email=user.email,
                         client_name=user.full_name,
@@ -196,7 +196,7 @@ def submit_request(request):
                         status='pending'
                     )
                     
-                    # Сотрудникам
+                    """Сотрудникам"""
                     from .models import AccessKey
                     employees = AccessKey.objects.using('access_db').filter(
                         department=service_request.department,
@@ -218,7 +218,7 @@ def submit_request(request):
                 except Exception as e:
                     print(f"⚠️ Ошибка фоновой отправки email: {e}")
             
-            # Запускаем поток
+            """Запускаем поток"""
             thread = threading.Thread(target=send_emails_thread)
             thread.daemon = True
             thread.start()
@@ -250,7 +250,7 @@ def notify_client_from_app(request):
             service_request = ServiceRequest.objects.get(id=request_id)
             print(f"📋 Заявка #{request_id} найдена")
             
-            # Ищем пользователя по ФИО
+            """Ищем пользователя по ФИО"""
             user = RegisterUser.objects.using('users_db').filter(full_name=service_request.full_name).first()
             
             if user and user.email:
@@ -279,7 +279,7 @@ def notify_client_from_app(request):
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
 
-# API для приложения сотрудников
+"""API для приложения сотрудников"""
 @csrf_exempt
 def employee_login(request):
     """Вход сотрудника в приложение"""
@@ -304,6 +304,7 @@ def employee_login(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
     
     return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
+
 
 @csrf_exempt
 def get_employee_requests(request):

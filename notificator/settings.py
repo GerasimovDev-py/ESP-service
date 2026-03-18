@@ -3,34 +3,31 @@ import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Загружаем переменные окружения
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-l1b@2vw_u-ax#lwgq(^um97-6dxde1=_j8r8ztk7&ds6rs2xa*')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '.up.railway.app',  # разрешаем все поддомены railway
-    'esp-service.up.railway.app',  # твой конкретный домен
+    '.up.railway.app',
+    'esp-service.up.railway.app',
 ]
 
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.up.railway.app',  # разрешаем все https поддомены railway
-    'https://esp-service.up.railway.app',  # твой конкретный домен
+    'https://*.up.railway.app',
+    'https://esp-service.up.railway.app',
 ]
 
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 
-# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -84,7 +81,6 @@ DATABASES = {
 
 DATABASE_ROUTERS = ['requests_app.db_routers.MultiDBRouter']
 
-# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -100,13 +96,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
+
 LANGUAGE_CODE = 'ru-RU'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
@@ -114,7 +109,6 @@ STATICFILES_DIRS = [
 ]
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 import os

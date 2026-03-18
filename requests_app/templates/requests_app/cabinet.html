@@ -363,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
             } catch (error) {
                 console.error('Ошибка:', error);
-                // Заявка скорее всего создана, просто сообщаем об этом
                 const userConfirmation = confirm('✅ Заявка отправлена!\n\nХотите перейти к списку заявок?');
                 
                 if (userConfirmation) {
