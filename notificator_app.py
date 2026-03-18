@@ -209,6 +209,38 @@ class ModernDesktopNotificator:
         except Exception as e:
             print(f"Ошибка воспроизведения звука: {e}")
     
+    def show_notification(self, title, message):
+        """Показ всплывающего уведомления"""
+        if not self.notification_enabled:
+            print(f"🔔 {title}: {message}")
+            return
+            
+        try:
+            if platform.system() == "Windows":
+                try:
+                    from plyer import notification
+                    notification.notify(
+                        title=title,
+                        message=message,
+                        app_name="Конфигуратор системы платежей",
+                        timeout=10
+                    )
+                    print(f"📬 Уведомление отправлено: {title}")
+                except:
+                    if hasattr(self, 'tray_icon'):
+                        self.tray_icon.notify(message, title)
+            else:
+                print(f"🔔 {title}: {message}")
+                if hasattr(self, 'tray_icon'):
+                    self.tray_icon.notify(message, title)
+        except Exception as e:
+            print(f"Ошибка уведомления: {e}")
+            if hasattr(self, 'tray_icon'):
+                try:
+                    self.tray_icon.notify(message, title)
+                except:
+                    pass
+    
     def setup_main_window(self):
         self.root = ctk.CTk()
         self.root.title(f"Конфигуратор - {self.employee['full_name']} ({self.get_department_name()})")
