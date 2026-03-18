@@ -1,21 +1,13 @@
-# Django и база данных
 Django==4.2.0
 psycopg2-binary==2.9.10
 dj-database-url==2.3.0
-
-# Окружение и статика
 python-dotenv==1.0.1
 whitenoise==6.8.2
 gunicorn==23.0.0
-
-# (notificator_app.py)
 customtkinter==5.2.2
 Pillow==11.1.0
 pystray==0.19.1
 plyer==2.1
-pywin32==308
 requests==2.31.0
-
-# Утилиты
 setuptools==69.5.1
 wheel==0.43.0
