@@ -259,6 +259,12 @@ class ModernDesktopNotificator:
         return dept_map.get(self.employee['department'], self.employee['department'])
     
     def create_tray_icon(self):
+        if hasattr(self, 'tray_icon'):
+            try:
+                self.tray_icon.stop()
+            except:
+                pass
+        
         image = Image.new('RGB', (64, 64), color='#0078d4')
         draw = ImageDraw.Draw(image)
         
@@ -274,7 +280,12 @@ class ModernDesktopNotificator:
             pystray.MenuItem("Выход", self.quit_app)
         )
         
-        self.tray_icon = pystray.Icon("configurator", image, "Конфигуратор системы платежей", menu)
+        self.tray_icon = pystray.Icon(
+            "ESP_Configurator_unique", 
+            image, 
+            "Конфигуратор системы платежей", 
+            menu
+        )
         threading.Thread(target=self.tray_icon.run, daemon=True).start()
     
     def hide_window(self):
